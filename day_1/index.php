@@ -10,6 +10,7 @@
 
 //file with data
 $handle = fopen("inputfile.txt", "r");
+$start = hrtime(true);
 
 $answer = 0;
 //what we are looking for
@@ -21,6 +22,9 @@ if($handle){
 		$answer += findNumbers($line);
 	}
 	echo $answer;
+	
+	echo "</br>_____________________________________</br>";
+	echo ((hrtime(true) - $start)/1000000) . "ms";
 	fclose($handle);
 }
 

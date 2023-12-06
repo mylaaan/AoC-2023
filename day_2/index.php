@@ -10,6 +10,7 @@
 
 //file with data
 $handle = fopen("inputfile.txt", "r");
+$start = hrtime(true);
 
 $answer = 0;
 if ($handle) {
@@ -18,6 +19,9 @@ if ($handle) {
         $answer += findValidGames($line);
     }
     echo $answer;
+	
+	echo "</br>_____________________________________</br>";
+	echo ((hrtime(true) - $start)/1000000) . "ms";
     fclose($handle);
 }
 

@@ -8,8 +8,10 @@
  * it just needed to work once and nobody is going to reuse this, right?
  */
 
+
 //file with data
 $handle = fopen("inputfile.txt", "r");
+$start = hrtime(true);
 
 //because of the regex function these need to be strings over here
 $timelimit = "";
@@ -21,11 +23,14 @@ if($handle){
 		$numbers = explode(": ", $line);
 		if(strlen($timelimit) === 0){
 			$timelimit = preg_replace('/\s+/', "", $numbers[1]);
-		}else{
+		} else{
 			$distance = preg_replace('/\s+/', "", $numbers[1]);
 		}
 	}
 	echo intersect($timelimit, $distance);
+	
+	echo "</br>______________________________________</br>";
+	echo ((hrtime(true) - $start)/1000000) . "ms";
 	fclose($handle);
 }
 
@@ -33,9 +38,9 @@ if($handle){
 function intersect($timelimit, $distance): int{
 	//let get a head start
 	for($i = floor($distance / $timelimit); $i <= $timelimit; $i++){
-		if(($i * ($timelimit-$i)) > $distance){
+		if(($i * ($timelimit - $i)) > $distance){
 			//the crossover is the same amount on both ends so just subtract that
-			return ($timelimit - (2*$i)) + 1;
+			return ($timelimit - (2 * $i)) + 1;
 		}
 	}
 	return 0;
