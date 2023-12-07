@@ -4,7 +4,8 @@
  * as is the fun for these puzzles.
  * This is not clean or thought through code,
  * a fast time is of the essence.
- * I'm not going to clean up afterwards (just added some comments),
+ * This is one I did clean up actually, I determined the rank
+ * and normalized the cards every time I compared. That's quite a few times too much.
  * it just needed to work once and nobody is going to reuse this, right?
  */
 
@@ -14,20 +15,27 @@ $handle = fopen("inputfile.txt", "r");
 $start = hrtime(true);
 
 $totalRanking = array();
+$rankNumber = 0;
 $answer = 0;
 if($handle){
 	//as long the file has not ended
 	while(($line = fgets($handle)) !== false){
 		$line = trim($line);
 		$hand = explode(" ", $line);
-		$totalRanking[] = $hand;
+		//prepare by already normalizing values and determining the hand, so it doesn't need to happen every compare
+		$cards = str_split($hand[0]);
+		$hand[0] = normalizeValues($cards);
+		$totalRanking[$rankNumber] = array();
+		$totalRanking[$rankNumber][] = determineRank(array_count_values($cards));;
+		$totalRanking[$rankNumber][] = $hand;
+		$rankNumber++;
 	}
 	//use standard sort function with custom compare function
 	//maybe could have been faster with a custom sort algorithm
 	usort($totalRanking, "compare");
 	$rankNumber = 1;
 	foreach($totalRanking as $rank){
-		$answer += ($rankNumber * intval($rank[1]));
+		$answer += ($rankNumber * intval($rank[1][1]));
 		$rankNumber++;
 	}
 	echo $answer;
@@ -39,15 +47,10 @@ if($handle){
 
 
 function compare($handOne, $handTwo): int{
-	$one = str_split($handOne[0]);
-	$two = str_split($handTwo[0]);
-	//these ranks will not be relative but an absolute number for what kind of hand they have
-	$rankOne = determineRank(array_count_values($one));
-	$rankTwo = determineRank(array_count_values($two));
+	$one = $handOne[1][0];
+	$two = $handTwo[1][0];
 	//if they're not the same type we can skip this block
-	if( $rankOne == $rankTwo){
-		$one = normalizeValues($one);
-		$two = normalizeValues($two);
+	if( $handOne[0] == $handTwo[0]){
 		for($i = 0; $i < count($one); $i++){
 			if($one[$i] != $two[$i]){
 				return $one[$i] <=> $two[$i];
@@ -56,7 +59,7 @@ function compare($handOne, $handTwo): int{
 		//the data set doesn't allow it, but theoretically it can happen that two hands are identical
 		return 0;
 	}
-	return $rankOne <=> $rankTwo;
+	return $handOne[0] <=> $handTwo[0];
 }
 
 //if the hand was the same type we need compare individual card. So we need to normalize the value
