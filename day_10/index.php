@@ -15,11 +15,6 @@ $start = hrtime(true);
 
 $map = array();
 $startPosition = array();
-$rememberRoute = array();
-$lowLoopLongitude = 141;
-$lowLoopLatitude = 141;
-$highLoopLongitude = 0;
-$highLoopLatitude = 0;
 if($handle){
 	$border = "";
 	for($i = 0; $i < 142; $i++){
@@ -35,13 +30,12 @@ if($handle){
 			$startPosition[] = count($map);
 			$startPosition[] = strpos($line, "S");
 		}
-		$longitude = str_split($line);
-		$map[] = $longitude;
+		$map[] = str_split($line);
 	}
 	$map[] = str_split($border);
 	//do what we need to do
 	$map = exchangeStartingPoint($map, $startPosition);
-	findRoute($map, $startPosition);
+	$map = findRoute($map, $startPosition);
 	$nestPossibilities = identifyInsideLoop($map);
 	echo $nestPossibilities;
 	
@@ -53,20 +47,18 @@ if($handle){
 
 //lookup if places are inside the loop
 function identifyInsideLoop($map){
-	global $lowLoopLongitude;
-	global $lowLoopLatitude;
-	global $highLoopLongitude;
-	global $highLoopLatitude;
-	global $rememberRoute;
 	$nestPossibilities = 0;
-	for($i = $lowLoopLongitude; $i <= $highLoopLongitude; $i++){
+	for($i = 0; $i < count($map); $i++){
 		$inside = false;
 		$corner = ".";
-		for($j = $lowLoopLatitude; $j <= $highLoopLatitude; $j++){
+		for($j = 0; $j < count($map[0]); $j++){
 			$type = $map[$i][$j];
-			$coordinate = array($i, $j);
-			//this costs 100x more time than it should
-			$partOfRoute = in_array($coordinate, $rememberRoute);
+			$partOfRoute = false;
+			//if this is not a character but an array it was marked as part of the loop
+			if(is_array($map[$i][$j])){
+				$partOfRoute = true;
+				$type = $map[$i][$j][0];
+			}
 			if(str_contains("|7FLJ", $type) && $partOfRoute){
 				//every time we pass a pipe we decide if we're in or out
 				switch($type){
@@ -93,6 +85,7 @@ function identifyInsideLoop($map){
 						break;
 				}
 			} elseif(!$partOfRoute && $inside){
+				$map[$i][$j] = "I";
 				$nestPossibilities++;
 			}
 		}
@@ -102,44 +95,28 @@ function identifyInsideLoop($map){
 
 //find the route of the loop
 function findRoute($map, $currentPosition){
-	global $lowLoopLongitude;
-	global $lowLoopLatitude;
-	global $highLoopLongitude;
-	global $highLoopLatitude;
-	global $rememberRoute;
-	
+	global $trueStart;
+	//set a starting point so we know when to stop
+	$trueStart = $currentPosition;
 	$previous = $currentPosition;
-	$rememberRoute[] = $currentPosition;
 	//while we did not finish the loop
 	do{
+		$pipe = $map[$currentPosition[0]][$currentPosition[1]];
+		$map[$currentPosition[0]][$currentPosition[1]] = array($pipe, true);
 		$tempPrevious = $previous;
 		$previous = $currentPosition;
-		$currentPosition = coordinateManipulator($map, $currentPosition, $tempPrevious);
-		$rememberRoute[] = $currentPosition;
+		$currentPosition = coordinateManipulator($map, $currentPosition, $tempPrevious, $pipe);
 		
-		//very small optimization for how many things we have to loop through when doing part 2
-		if($currentPosition[0] < $lowLoopLongitude){
-			$lowLoopLongitude = $currentPosition[0];
-		}
-		if($currentPosition[0] > $highLoopLongitude){
-			$highLoopLongitude = $currentPosition[0];
-		}
-		if($currentPosition[1] < $lowLoopLatitude){
-			$lowLoopLatitude = $currentPosition[1];
-		}
-		if($currentPosition[1] > $highLoopLatitude){
-			$highLoopLatitude = $currentPosition[1];
-		}
-	} while($currentPosition != $rememberRoute[0]);
+	} while($currentPosition != $trueStart);
+	return $map;
 }
 
 //check every side if we can connect and did not come from
-function coordinateManipulator($map, $current, $previous){
+function coordinateManipulator($map, $current, $previous, $pipe){
 	$northCheck = false;
 	$southCheck = false;
 	$westCheck = false;
 	$eastCheck = false;
-	$pipe = $map[$current[0]][$current[1]];
 	if($pipe == "|"){
 		$northCheck = true;
 		$southCheck = true;
@@ -181,6 +158,7 @@ function coordinateManipulator($map, $current, $previous){
 
 //find what character needs to replace S
 function exchangeStartingPoint($map, $start){
+	//what can connect on all the different sides
 	$northConnect = "7F|";
 	$southConnect = "JL|";
 	$westConnect = "FL-";
