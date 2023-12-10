@@ -1,11 +1,12 @@
 <?php
-/* Day 7 part 2 of Advent of Code.
+/* Day 10 part 2 of Advent of Code.
  * This solution was created from an original thought
  * as is the fun for these puzzles.
  * This is not clean or thought through code,
  * a fast time is of the essence.
- * I'm not going to clean up afterwards (just added some comments),
- * it just needed to work once and nobody is going to reuse this, right?
+ * I did a small fix so the loop is embedded in the map,
+ * now it doesn't have to check that every time which was costly
+ * It just needed to work once and nobody is going to reuse this, right?
  */
 
 
